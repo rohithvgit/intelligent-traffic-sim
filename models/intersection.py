@@ -1,14 +1,12 @@
 from models.road import Road
 
 class Intersection:
-    def __init__(self, intersection_id):
+    def __init__(self, intersection_id, road_ids=None):
         self.intersection_id = intersection_id
-        self.roads = {
-            "A": Road("A"),
-            "B": Road("B"),
-            "C": Road("C"),
-            "D": Road("D")
-        }
+        if road_ids is None:
+            road_ids = ["A", "B", "C", "D"] # Default
+            
+        self.roads = { rid: Road(rid) for rid in road_ids }
 
     def get_roads(self):
         return self.roads.values()

@@ -1,33 +1,15 @@
-from scheduler.signal_scheduler import SignalScheduler
-from config import BASE_GREEN_TIME
+import heapq
+from scheduler.priority_calc import calculate_priority
 
-class SignalController:
-    def __init__(self, intersection):
-        self.intersection = intersection
-        self.scheduler = SignalScheduler()
 
-        # Assumption: average time per car (seconds)
-        self.time_per_car = 2  
+class SignalScheduler:
+    def select_road(self, roads):
+        heap = []
 
-    def run_cycle(self):
-        # 1. Select road using priority queue
-        selected = self.scheduler.select_road(
-            self.intersection.get_roads()
-        )
+        for road in roads:
+            priority = calculate_priority(road)
+            # tie-breaker: road_id to avoid comparison of Road objects
+            heapq.heappush(heap, (-priority, road.road_id, road))
 
-        # 2. Time-based green signal logic
-        max_cars_passable = BASE_GREEN_TIME // self.time_per_car
-        cleared = min(max_cars_passable, selected.vehicle_count())
-
-        # 3. Clear vehicles
-        for _ in range(cleared):
-            selected.queue.popleft()
-
-        # 4. Update starvation counters
-        for road in self.intersection.get_roads():
-            if road != selected:
-                road.red_cycles += 1
-            else:
-                road.red_cycles = 0
-
-        return selected, cleared
+        _, _, selected_road = heapq.heappop(heap)
+        return selected_road
